@@ -1,0 +1,65 @@
+#include <EEPROM.h>
+
+#define UART_BAUD_RATE 2400
+#define DATA_SIZE 1000
+#define CRC_POLYNOMIAL 0x8C  // CRC-8 polynomial, you can use CRC-16 if needed
+
+void setup() {
+  Serial.begin(UART_BAUD_RATE);
+}
+
+unit8_t calculate_crc8(unit8_t *data, int size) {
+  unit8_t crc = 0;
+  for (int i = 0; i < size; i++) {
+    crc ^= data[i];
+    for (int j = 0; j < 8; j++) {
+      crc = (crc & 0x80) ? (crc << 1) ^ CRC_POLYNOMIAL : crc << 1;
+    }
+  }
+  return crc;
+}
+
+void send_data_to_pc(char *data, int size) {
+  for (int i = 0; i < size; i++) {
+    Serial.write(data[i]);
+    delayMicroseconds(1000000 / UART_BAUD_RATE);  // Simulate UART speed
+  }
+}
+
+void loop() {
+  char received_data[DATA_SIZE];
+  uint8_t crc;
+
+  // Receive data from PC and store in EEPROM
+  for (int i = 0; i < DATA_SIZE; i++) {
+    while (!Serial.available()) {
+      // Wait for data
+    }
+    received_data[i] = Serial.read();
+    EEPROM.write(i, received_data[i]);
+    crc = calculate_crc8((unit8_t *)received_data, i + 1);
+    if (crc != 0) {
+      // Handle corrupted data
+      Serial.println("Error: Data corruption detected!");
+      break;
+    }
+  }
+
+  // Transmit stored data back to PC
+  for (int i = 0; i < DATA_SIZE; i++) {
+    char data_byte = EEPROM.read(i);
+    send_data_to_pc(&data_byte, 1);
+  }
+/ Test data
+const char dataToSend[] = " Finance Minister Arun Jaitley Tuesday hit out at former RBI governor Raghuram Rajan for predicting that the next banking crisis would be triggered by MSME lending, saying postmortem is easier than taking action when it was required. Rajan, who had as the chief economist at IMF warned of impending financial crisis of 2008, in a note to a parliamentary committee warned against ambitious credit targets and loan waivers, saying that they could be the sources of next banking crisis. Government should focus on sources of the next crisis, not just the last one.
+
+In particular, government should refrain from setting ambitious credit targets or waiving loans. Credit targets are sometimes achieved by abandoning appropriate due diligence, creating the environment for future NPAs," Rajan said in the note." Both MUDRA loans as well as the Kisan Credit Card, while popular, have to be examined more closely for potential credit risk. Rajan, who was RBI governor for three years till September 2016, is currently."";
+
+int main() {
+    // Send data to MCU
+    sendDataToMCU(dataToSend);
+
+    // Receive and print data from MCU
+    const char *receivedData = receiveDataFromMCU();
+    printf("\nReceived Data from MCU: %s", receivedData);
+}
