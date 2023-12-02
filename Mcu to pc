@@ -2,7 +2,7 @@
 
 #define UART_BAUD_RATE 2400
 #define DATA_SIZE 1000
-#define CRC_POLYNOMIAL 0x8C  // CRC-8 polynomial, you can use CRC-16 if needed
+#define CRC_POLYNOMIAL 0x8C  
 
 void setup() {
   Serial.begin(UART_BAUD_RATE);
@@ -13,7 +13,7 @@ unit8_t calculate_crc8(unit8_t *data, int size) {
   for (int i = 0; i < size; i++) {
     crc ^= data[i];
     for (int j = 0; j < 8; j++) {
-      crc = (crc & 0x80) ? (crc << 1) ^ CRC_POLYNOMIAL : crc << 1;
+      crc = (crc & 0x80) ^ CRC_POLYNOMIAL : crc << 1;
     }
   }
   return crc;
@@ -22,7 +22,7 @@ unit8_t calculate_crc8(unit8_t *data, int size) {
 void send_data_to_pc(char *data, int size) {
   for (int i = 0; i < size; i++) {
     Serial.write(data[i]);
-    delayMicroseconds(1000000 / UART_BAUD_RATE);  // Simulate UART speed
+    delay(1000000 / UART_BAUD_RATE);  // Simulate UART speed
   }
 }
 
