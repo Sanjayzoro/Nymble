@@ -15,7 +15,7 @@ def send_data_to_mcu(data):
     data_with_crc = f"{data}${crc:04X}" 
     for char in data_with_crc:
         ser.write(char.encode())
-        time.sleep(1 / 2400)  
+        time.sleep( 2400)  
     ser.close()
 
 # Receive data from MCU
